@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name         超星 To Csv
 // @version      0.1.0
-// @description  将你的超星学习通里的作业数据导出成为 Csv 文件，方便导入 Anki 背题
+// @description  将你的超星学习通里的作业数据、随堂练习导出成为 Csv 文件，方便导入 Anki 背题
 // @author       Nexmoe
+// @namespace     https://nexmoe.com/
 // @match        *://*.chaoxing.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @license      MIT
 // ==/UserScript==
 
 // 在此处键入代码……
@@ -22,7 +24,11 @@ let generateTextArea = (data) => {
     let node = document.createElement("textarea");
     let textnode = document.createTextNode(data);
     node.appendChild(textnode);
-    document.getElementsByClassName("detailsHead")[0].appendChild(node);
+    if (document.getElementsByClassName("detailsHead").length > 0) {
+        document.getElementsByClassName("detailsHead")[0].appendChild(node);
+    } else {
+        document.getElementsByClassName("top-box")[0].appendChild(node);
+    }
 }
 
 function ConvertToCSV(objArray) {
@@ -50,13 +56,26 @@ let saveFile = (data) => {
     link.download = `data.csv`;	//文件名字
     link.href = Url;
     link.appendChild(document.createTextNode('下载题目数据'));
-    document.getElementsByClassName("detailsHead")[0].appendChild(link);
+    if (document.getElementsByClassName("detailsHead").length > 0) {
+        document.getElementsByClassName("detailsHead")[0].appendChild(link);
+    } else {
+        document.getElementsByClassName("top-box")[0].appendChild(link);
+    }
 }
 
-let getHomeworkData = (i, data = []) => {
-    let questions = document.getElementsByClassName("mark_name");
-    let selections = document.getElementsByClassName("mark_letter");
-    let answers = document.getElementsByClassName("colorGreen");
+let getData = (i, data = []) => {
+    let questions, selections, answers;
+    if (document.getElementsByClassName("mark_name").length > 0) {
+        questions = document.getElementsByClassName("mark_name");
+        selections = document.getElementsByClassName("mark_letter");
+        answers = document.getElementsByClassName("colorGreen");
+    } else {
+        questions = document.getElementsByClassName("topic-title");
+        selections = document.getElementsByClassName("topic-options");
+        answers = document.getElementsByClassName("color-green");
+
+    }
+
     for (i = 0; i < questions.length; i++) {
         data.push({
             question: questions[i].innerText.replace(
@@ -92,6 +111,13 @@ let getHomeworkData = (i, data = []) => {
 (function () {
     'use strict';
     css();
-    generateTextArea(JSON.stringify(getHomeworkData()));
-    saveFile(ConvertToCSV(JSON.stringify(getHomeworkData())));
+    if (document.getElementsByClassName("mark_name").length > 0) {
+        generateTextArea(JSON.stringify(getData()));
+        saveFile(ConvertToCSV(JSON.stringify(getData())));
+    } else {
+        setTimeout(() => {
+            generateTextArea(JSON.stringify(getData()));
+            saveFile(ConvertToCSV(JSON.stringify(getData())));
+        }, 1000)
+    }
 })();
