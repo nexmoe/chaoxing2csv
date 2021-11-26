@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         超星 To Csv
-// @version      0.1.0
+// @version      0.1.1
 // @description  将你的超星学习通里的作业数据、随堂练习导出成为 Csv 文件，方便导入 Anki 背题
 // @author       Nexmoe
-// @github       https://github.com/nexmoe/chaoxing2csv
-// @namespace    https://nexmoe.com/
+// @namespace     https://nexmoe.com/
 // @match        *://*.chaoxing.com/*
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @license      MIT
 // ==/UserScript==
 
@@ -52,7 +53,12 @@ let saveFile = (data) => {
     const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
     const Url = URL.createObjectURL(blob);
     let link = document.createElement('a');
-    link.download = `data.csv`;	//文件名字
+    if(document.getElementsByClassName("item-name").length > 0){
+        link.download = document.getElementsByClassName("item-name")[0].innerText+'.csv';	//文件名字
+    } else {
+        link.download = document.getElementsByClassName("mark_title")[0].innerText+'.csv';	//文件名字
+    }
+    
     link.href = Url;
     link.appendChild(document.createTextNode('下载题目数据'));
     if (document.getElementsByClassName("detailsHead").length > 0) {
@@ -108,7 +114,6 @@ let getData = (i, data = []) => {
 }
 
 (function () {
-    'use strict';
     css();
     if (document.getElementsByClassName("mark_name").length > 0) {
         generateTextArea(JSON.stringify(getData()));
