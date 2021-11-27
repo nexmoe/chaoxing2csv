@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         超星 To Csv
-// @version      0.1.1
+// @version      0.1.2
 // @description  将你的超星学习通里的作业数据、随堂练习导出成为 Csv 文件，方便导入 Anki 背题
 // @author       Nexmoe
 // @github       https://github.com/nexmoe/chaoxing2csv
@@ -52,12 +52,12 @@ let saveFile = (data) => {
     const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
     const Url = URL.createObjectURL(blob);
     let link = document.createElement('a');
-    if(document.getElementsByClassName("item-name").length > 0){
-        link.download = document.getElementsByClassName("item-name")[0].innerText+'.csv';	//文件名字
+    if (document.getElementsByClassName("item-name").length > 0) {
+        link.download = document.getElementsByClassName("item-name")[0].innerText + '.csv';	//文件名字
     } else {
-        link.download = document.getElementsByClassName("mark_title")[0].innerText+'.csv';	//文件名字
+        link.download = document.getElementsByClassName("mark_title")[0].innerText + '.csv';	//文件名字
     }
-    
+
     link.href = Url;
     link.appendChild(document.createTextNode('下载题目数据'));
     if (document.getElementsByClassName("detailsHead").length > 0) {
@@ -67,8 +67,82 @@ let saveFile = (data) => {
     }
 }
 
+let optionsFilter = (dom, i = 0, strings = "") => {
+    for (i = 0; i < dom.children.length; i++) {
+        if (i < (dom.children.length - 1)) {
+            strings = strings + dom.children[i].innerText + "||";
+        } else {
+            strings = strings + dom.children[i].innerText;
+        }
+    }
+    return strings.replace(
+        new RegExp(",", "gm"),
+        "，"
+    ).replace(
+        new RegExp("\n", "gm"),
+        ""
+    );
+}
+
+let answersFilter = (dom, i = 0, strings = "") => {
+    answer = dom.innerText.replace("正确答案: ", "").replace(
+        new RegExp(",", "gm"),
+        "，"
+    ).replace(
+        new RegExp(" ", "gm"),
+        ""
+    ).replace(
+        new RegExp("对", "gm"),
+        "A"
+    ).replace(
+        new RegExp("错", "gm"),
+        "B"
+    );
+
+    for (i = 0; i < answer.length; i++) {
+        if (i < (answer.length - 1)) {
+            strings = strings + (answer.charCodeAt(i) - 64) + "||"
+        } else {
+            strings = strings + (answer.charCodeAt(i) - 64)
+        }
+
+    }
+
+    return strings;
+}
+
+let questionsFilter = (dom, answers, i = 0, strings = "") => {
+    question = dom.innerText.replace(
+        new RegExp(",", "gm"),
+        "，"
+    ).replace(
+        new RegExp("\n", "gm"),
+        ""
+    );
+    answer = answers.innerText.replace("正确答案: ", "").replace(
+        new RegExp(",", "gm"),
+        "，"
+    ).replace(
+        new RegExp(" ", "gm"),
+        ""
+    ).replace(
+        new RegExp("对", "gm"),
+        "A"
+    ).replace(
+        new RegExp("错", "gm"),
+        "B"
+    );
+
+    for (i = 0; i < answer.length; i++) {
+        strings = strings + "{{c" + (i+ 1) + "::}}"
+
+    }
+
+    return question + strings;
+}
+
 let getData = (i, data = []) => {
-    let questions, selections, answers;
+    let questions, selections, answers, notes;
     if (document.getElementsByClassName("mark_name").length > 0) {
         questions = document.getElementsByClassName("mark_name");
         selections = document.getElementsByClassName("mark_letter");
@@ -82,30 +156,10 @@ let getData = (i, data = []) => {
 
     for (i = 0; i < questions.length; i++) {
         data.push({
-            question: questions[i].innerText.replace(
-                new RegExp(",", "gm"),
-                "，"
-            ).replace(
-                new RegExp("\n", "gm"),
-                ""
-            ),
-            selection: selections[i].innerText.replace(
-                new RegExp("\n", "gm"),
-                "***"
-            ).replace(
-                new RegExp(",", "gm"),
-                "，"
-            ),
-            answer: answers[i].innerText.replace("正确答案: ", "").replace(
-                new RegExp(",", "gm"),
-                "，"
-            ).replace(
-                new RegExp("对", "gm"),
-                "A"
-            ).replace(
-                new RegExp("错", "gm"),
-                "B"
-            )
+            id: String(new Date().getTime()) + String(Math.floor(Math.random() * 100000)),
+            question: questionsFilter(questions[i], answers[i]),
+            options: optionsFilter(selections[i]),
+            answer: answersFilter(answers[i]),
         })
     }
     console.log(data)
