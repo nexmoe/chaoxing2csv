@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         超星 To Csv
-// @version      0.1.3
+// @version      0.1.4
 // @description  将你的超星学习通里的作业数据、随堂练习导出成为 Csv 文件，方便导入 Anki 背题
 // @author       Nexmoe
 // @github       https://github.com/nexmoe/chaoxing2csv
@@ -118,6 +118,9 @@ let questionsFilter = (dom, answers, i = 0, strings = "") => {
     ).replace(
         new RegExp("\n", "gm"),
         ""
+    ).replace(
+        new RegExp("http://", "gm"),
+        "https://"
     );
     answer = answers.innerText.replace("正确答案: ", "").replace(
         new RegExp(",", "gm"),
