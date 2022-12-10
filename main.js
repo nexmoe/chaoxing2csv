@@ -14,28 +14,71 @@ const getPage = () => {
         return "homework";
     } else if (document.querySelector(".top-box")) {
         return "practice";
+    } else if (document.querySelector(".CeYan")) {
+        return "ceyan";
     } else {
         return "invalid";
     }
 }
 
 const page = getPage();
-console.log(page)
+
+const chaoxing2csv = {
+    typeList: [
+        "(单选题)",
+        "(多选题)",
+        "(判断题)",
+    ],
+    typeToKey: {
+        "(单选题)": "select",
+        "(多选题)": "select",
+        "(判断题)": "select",
+    },
+    homework: {
+        type: ".mark_name .colorShallow",
+        title: ".mark_title",
+        textarea: ".detailsHead",
+        list: ".questionLi",
+        select: {
+            question: ".mark_name",
+            options: ".mark_letter",
+            options2: ".stem_answer",
+            answer: ".colorGreen",
+            answer2: ".check_answer"
+        },
+    },
+    practice: {
+        type: ".topic-title .topic-type",
+        title: ".textHeightauto",
+        textarea: ".top-box",
+        list: ".question-list",
+        select: {
+            question: ".topic-title",
+            options: ".topic-options",
+            answer: ".color-green"
+        },
+    },
+    ceyan: {
+        title: ".ZyTop h3",
+        textarea: ".ZyTop",
+        list: ".TiMu",
+    }
+}
 
 const generateTextArea = (data) => {
     let node = document.createElement("textarea");
-    node.style = `border: 3px solid;
+    node.style = `
         width: 100%;
         resize: none;
+        padding: 12px;
+        background-color: #171717;
+        color: #fff;
         box-sizing: border-box;
         height: 70px;`;
     let textnode = document.createTextNode(data);
     node.appendChild(textnode);
-    if (page == "homework") {
-        document.getElementsByClassName("detailsHead")[0].appendChild(node);
-    } else {
-        document.getElementsByClassName("top-box")[0].appendChild(node);
-    }
+
+    document.querySelector(chaoxing2csv[page].textarea).appendChild(node);
 }
 
 function ConvertToCSV(objArray) {
@@ -63,13 +106,8 @@ let saveFile = (data) => {
     link.href = Url;
     link.appendChild(document.createTextNode('下载题目 CSV 数据'));
 
-    if (page == "homework") {
-        link.download = document.querySelector(".mark_title").innerText + '.csv';	//文件名字
-        document.getElementsByClassName("detailsHead")[0].appendChild(link);
-    } else {
-        link.download = document.querySelector(".textHeightauto").innerHTML + '.csv';	//文件名字
-        document.getElementsByClassName("top-box")[0].appendChild(link);
-    }
+    link.download = document.querySelector(chaoxing2csv[page].title).innerHTML + '.csv';	//文件名字
+    document.querySelector(chaoxing2csv[page].textarea).appendChild(link);
 }
 
 let optionsFilter = (dom, i = 0, strings = "") => {
@@ -158,52 +196,21 @@ let questionsFilter = (dom, answers, i = 0, strings = "") => {
     return question + strings;
 }
 
-const domKey = {
-    typeList: [
-        "(单选题)",
-        "(多选题)",
-        "(判断题)",
-    ],
-    typeToKey: {
-        "(单选题)": "select",
-        "(多选题)": "select",
-        "(判断题)": "select",
-    },
-    homework: {
-        type: ".mark_name .colorShallow",
-        select: {
-            question: ".mark_name",
-            options: ".mark_letter",
-            options2: ".stem_answer",
-            answer: ".colorGreen",
-            answer2: ".check_answer"
-        },
-    },
-    practice: {
-        type: ".topic-title .topic-type",
-        select: {
-            question: ".topic-title",
-            options: ".topic-options",
-            answer: ".color-green"
-        },
-    }
-}
-
 let getData = (i, data = []) => {
-    let questionList = page == "homework" ? document.querySelectorAll(".questionLi") : document.querySelectorAll(".question-list");
+    let questionList = document.querySelectorAll(chaoxing2csv[page].list);
 
     for (let child of questionList) {
         let type, question, options, answer, questItem;
-        type = child.querySelector(domKey[page].type).innerText.replace(" ", "");
-        if (!domKey.typeList.includes(type)) {
+        type = child.querySelector(chaoxing2csv[page].type).innerText.replace(" ", "");
+        if (!chaoxing2csv.typeList.includes(type)) {
             console.log("不支持：", type)
             continue;
         } else {
-            type = domKey.typeToKey[type];
+            type = chaoxing2csv.typeToKey[type];
         }
-        const qDom = child.querySelector(domKey[page][type].question);
-        const oDom = child.querySelector(domKey[page][type].options) || child.querySelector(domKey[page][type].options2);
-        const aDom = child.querySelector(domKey[page][type].answer) || child.querySelector(domKey[page][type].answer2);
+        const qDom = child.querySelector(chaoxing2csv[page][type].question);
+        const oDom = child.querySelector(chaoxing2csv[page][type].options) || child.querySelector(chaoxing2csv[page][type].options2);
+        const aDom = child.querySelector(chaoxing2csv[page][type].answer) || child.querySelector(chaoxing2csv[page][type].answer2);
         try {
             question = questionsFilter(qDom, aDom);
         } catch (e) {
@@ -239,6 +246,7 @@ let getData = (i, data = []) => {
         delete child.style;
     }
     setTimeout(() => {
+        console.log(page)
         if (page !== "invalid") {
             const data = JSON.stringify(getData());
             generateTextArea(ConvertToCSV(data));
