@@ -25,9 +25,9 @@ const page = getPage();
 
 const chaoxing2csv = {
     typeList: [
-        "(单选题)",
-        "(多选题)",
-        "(判断题)",
+        "单选题",
+        "多选题",
+        "判断题",
     ],
     typeToKey: {
         "(单选题)": "select",
@@ -202,12 +202,15 @@ let getData = (i, data = []) => {
     for (let child of questionList) {
         let type, question, options, answer, questItem;
         type = child.querySelector(chaoxing2csv[page].type).innerText.replace(" ", "");
-        if (!chaoxing2csv.typeList.includes(type)) {
-            console.log("不支持：", type)
-            continue;
-        } else {
-            type = chaoxing2csv.typeToKey[type];
+        for (let i = 0; i < chaoxing2csv.typeList.length; i++) {
+            if (!type.includes(chaoxing2csv.typeList[i])) {
+                console.log("不支持：", type)
+                continue;
+            } else {
+                type = "select";
+            }
         }
+
         const qDom = child.querySelector(chaoxing2csv[page][type].question);
         const oDom = child.querySelector(chaoxing2csv[page][type].options) || child.querySelector(chaoxing2csv[page][type].options2);
         const aDom = child.querySelector(chaoxing2csv[page][type].answer) || child.querySelector(chaoxing2csv[page][type].answer2);
